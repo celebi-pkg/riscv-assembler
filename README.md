@@ -1,4 +1,5 @@
 <!--[![kcelebi](https://circleci.com/gh/celebi-pkg/riscv-assembler.svg?style=svg)](https://circleci.com/gh/celebi-pkg/riscv-assembler)-->
+[![Run Tests](https://github.com/celebi-pkg/riscv-assembler/actions/workflows/python-app.yml/badge.svg)](https://github.com/celebi-pkg/riscv-assembler/actions/workflows/python-app.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ![example](references/mdimg.png)
