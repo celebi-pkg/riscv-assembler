@@ -224,6 +224,8 @@ class _I_parse(InstructionParser):
 				rs1, imm, rd = reg_map[tokens[1]], 0, reg_map["x1"]
 		elif instr == "lw":
 			rs1, imm, rd = reg_map[tokens[3]], tokens[2], reg_map[tokens[1]]
+		elif instr == 'ld':
+			rs1, imm, rd = reg_map[tokens[3]], tokens[2], reg_map[tokens[1]]
 		else:
 			rs1, imm, rd = reg_map[tokens[2]], tokens[3], reg_map[tokens[1]]
 

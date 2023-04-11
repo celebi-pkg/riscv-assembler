@@ -1,6 +1,7 @@
 import pytest
 from pathlib import Path
 from riscv_assembler.convert import AssemblyConverter as AC
+from riscv_assembler.instr_arr import *
 from riscv_assembler.parse import Parser
 #TESTS
 
@@ -58,9 +59,8 @@ def func7():
 	#test calcJump()
 	path = str(Path(__file__).parent / "assembly/test2.s")
 
-	cnv = AC(filename = path)
-
-	return cnv.calcJump("loop",2) #3-1
+	code = Parser.read_file(path)
+	return Ip.JUMP('loop', 2, code)
 
 def func8():
 	#test hex
@@ -116,6 +116,13 @@ def func14():
 
 	return cnv(instr)
 
+def func15():
+	cnv = AC(hex_mode = True, output_mode = 'a')
+
+	instr = "add x4, x3, x3\nadd x1, x1, x2\naddi x1, x1, 7\nsd x1, 0(x4)\nld x1, 0(x4)"
+
+	return cnv(instr)
+
 #-----------------------------------------------------------------------------------------		
 #-----------------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------------
@@ -139,8 +146,8 @@ def test_5():
 def test_6():
 	assert func6() == ['p', True, True], "Test 6 Failed"
 
-#def test_7():
-#	assert func7() == 4
+def test_7():
+	assert func7() == 4
 
 def test_8():
 	assert func8() == ['0x000000b3', '0x02040293'], "Test 8 Failed"
@@ -163,3 +170,6 @@ def test_13():
 
 def test_14():
 	assert func14() == ['0x000000b3', '0x02040293', '0x02040293','0x00812023']
+
+def test_15():
+	assert func15() == ['0x00318233', '0x002080b3','0x00708093','0x00123023', '0x00023083']
