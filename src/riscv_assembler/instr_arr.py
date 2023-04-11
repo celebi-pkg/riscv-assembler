@@ -300,29 +300,22 @@ class _Pseudo_parse(InstructionParser):
 	Calculate a JUMP from a branch statement to another line
 '''
 def JUMP(tk : str, line_num : int, code: list) -> int:
-	# search forward
-	skip_labels = 0
-	for i in range(line_num, len(code)):
-		if tk + ":" == code[i]:
-			jump_size = (i - line_num - skip_labels) * 4 # how many instructions to jump ahead
-			return jump_size
 
-		# skip funcs that are not matching tk
-		if code[i][-1] == ':':
-			skip_labels += 1
+	try:
+		index, skip_labels = code.index(tk + ":"), 0
+	except:
+		raise Exception('''Address not found! Provided assembly code could
+			 be faulty, branch is expressed but not found in code.''')
 
-	# search backward
-	skip_labels = 0
-	for i in range(line_num, -1, -1):
-		# substruct correct label itself
-		if code[i][-1] == ':':
-			skip_labels += 1
 
-		if tk + ":" == code[i]:
-			jump_size = (i - line_num + skip_labels) * 4 # how many instructions to jump behind
-			return jump_size
+	if index > line_num: # forward search:
+		skip_labels = sum([1 for i in range(line_num, index) if code[i][-1] == ":"])
+	else: # backwards search
+		skip_labels = -1 * sum([1 for i in range(index+1, line_num) if code[i][-1] == ":"])
 
-	raise Exception("Address not found! Provided assembly code could be faulty, branch is expressed but not found in code.")
+	return (index - line_num - skip_labels) * 4
+
+	
 
 def register_map():
 	path = Path(__file__).parent / "data/reg_map.dat"
