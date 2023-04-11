@@ -2,7 +2,7 @@ from pathlib import Path
 
 __all__ = [
 	'R_instr', 'I_instr', 'S_instr',
-	'SB_instr', 'U_instr', 'UJ_instr','pseudo_instr', 'JUMP',
+	'SB_instr', 'U_instr', 'UJ_instr','pseudo_instr',
 	 'R', 'I', 'S', 'SB', 'U', 'UJ',
 	 'Rp', 'Ip', 'Sp', 'SBp', 'Up', 'UJp', 'Psp']
 
@@ -179,6 +179,21 @@ class InstructionParser:
 	def __call__(self, *args):
 		return self.organize(*args)
 
+	@staticmethod
+	def JUMP(tk : str, line_num : int, code: list) -> int:
+		try:
+			index, skip_labels = code.index(tk + ":"), 0
+		except:
+			raise Exception('''Address not found! Provided assembly code could
+				 be faulty, branch is expressed but not found in code.''')
+
+		if index > line_num: # forward search:
+			skip_labels = sum([1 for i in range(line_num, index) if code[i][-1] == ":"])
+		else: # backwards search
+			skip_labels = -1 * sum([1 for i in range(index+1, line_num) if code[i][-1] == ":"])
+
+		return (index - line_num - skip_labels) * 4
+
 class _R_parse(InstructionParser):
 
 	def __repr__(self):
@@ -204,7 +219,7 @@ class _I_parse(InstructionParser):
 		instr, rs1, imm, rd = tokens[0], None, None, None
 		if instr == "jalr":
 			if len(tokens) == 4+2:
-				rs1, imm, rd = reg_map[tokens[2]], JUMP(tokens[3], line_num, code), reg_map[tokens[1]]
+				rs1, imm, rd = reg_map[tokens[2]], super().JUMP(tokens[3], line_num, code), reg_map[tokens[1]]
 			else:
 				rs1, imm, rd = reg_map[tokens[1]], 0, reg_map["x1"]
 		elif instr == "lw":
@@ -236,7 +251,7 @@ class _SB_parse(InstructionParser):
 
 	def organize(self, tokens):
 		line_num, code = tokens[-2], tokens[-1]
-		instr, rs1, rs2, imm = tokens[0], reg_map[tokens[1]], reg_map[tokens[2]], JUMP(tokens[3], line_num, code)
+		instr, rs1, rs2, imm = tokens[0], reg_map[tokens[1]], reg_map[tokens[2]], super().JUMP(tokens[3], line_num, code)
 		return SB(instr, rs1, rs2, imm)
 
 class _U_parse(InstructionParser):
@@ -263,9 +278,9 @@ class _UJ_parse(InstructionParser):
 		line_num, code = tokens[-2], tokens[-1]
 		instr, imm, rd = tokens[0], None, None
 		if len(tokens) == 3:
-			imm, rd = JUMP(tokens[2], line_num, code), reg_map[tokens[1]]
+			imm, rd = super().JUMP(tokens[2], line_num, code), reg_map[tokens[1]]
 		else:
-			imm, rd = JUMP(tokens[1], line_num, code), reg_map["x1"]
+			imm, rd = super().JUMP(tokens[1], line_num, code), reg_map["x1"]
 
 		return UJ(instr, imm, rd)
 
@@ -295,27 +310,6 @@ class _Pseudo_parse(InstructionParser):
 
 		return BadInstructionError()
 
-
-'''
-	Calculate a JUMP from a branch statement to another line
-'''
-def JUMP(tk : str, line_num : int, code: list) -> int:
-
-	try:
-		index, skip_labels = code.index(tk + ":"), 0
-	except:
-		raise Exception('''Address not found! Provided assembly code could
-			 be faulty, branch is expressed but not found in code.''')
-
-
-	if index > line_num: # forward search:
-		skip_labels = sum([1 for i in range(line_num, index) if code[i][-1] == ":"])
-	else: # backwards search
-		skip_labels = -1 * sum([1 for i in range(index+1, line_num) if code[i][-1] == ":"])
-
-	return (index - line_num - skip_labels) * 4
-
-	
 
 def register_map():
 	path = Path(__file__).parent / "data/reg_map.dat"
