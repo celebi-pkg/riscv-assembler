@@ -1,5 +1,5 @@
-<!--[![kcelebi](https://circleci.com/gh/celebi-pkg/riscv-assembler.svg?style=svg)](https://circleci.com/gh/celebi-pkg/riscv-assembler)-->
-[![Run Test](https://img.shields.io/badge/Pkg%20Tests-PASSING-brightgreen.svg)](https://img.shields.io/badge/Pkg%20Tests-PASSING-brightgreen)
+[![celebi-pkg](https://circleci.com/gh/celebi-pkg/riscv-assembler.svg?style=svg)](https://circleci.com/gh/celebi-pkg/riscv-assembler)
+<!--[![Run Test](https://img.shields.io/badge/Pkg%20Tests-PASSING-brightgreen.svg)](https://img.shields.io/badge/Pkg%20Tests-PASSING-brightgreen)-->
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ![example](references/mdimg.png)
