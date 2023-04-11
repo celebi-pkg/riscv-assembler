@@ -5,6 +5,42 @@ from riscv_assembler.instr_arr import *
 from riscv_assembler.parse import Parser
 #TESTS
 
+
+def SUITE(path):
+	# 1. convert directly from file to array
+	# 2. convert directly from file to print (return nothing)
+	# 3. convert directly from file to txt file
+	# 4. convert directly from file to bin file
+	#----
+	# 5. convert contents from string to array
+	# 6. convert contents from string to print (return nothing)
+	# 7. convert contents from string to txt file
+	# 8. convert contents from string to bin file
+	#----
+	# 5. convert contents from string array to array
+	# 6. convert contents from string array to print (return nothing)
+	# 7. convert contents from string array to txt file
+	# 8. convert contents from string array to bin file
+
+	dump_path = str(Path(__file__).parent / "dump/")
+	paths = [str(Path(__file__).parent / "assembly/test{}.s".format(i)) for i in range(7)]
+
+	results = []
+	for i, path in enumerate(paths):
+		cnv = AC(hex_mode = True, output_mode = 'a')
+		results += [cnv(path)]
+		cnv.output_mode = 'p'
+		cnv(path)
+		cnv.output_mode = 'f'
+		cnv(path, dump_path + 'file{i}.txt'.format(i))
+		results += ['file{i}.txt'.format(i)]
+		cnv(path, dump_path + 'file{i}.bin'.format(i))
+		results += ['file{i}.bin'.format(i)]
+
+		with open(path) as f:
+			code = f.readlines()
+
+
 #test simple.s file, writes to txt and bin
 def func0():
 	#test convert, should return array
@@ -123,6 +159,13 @@ def func15():
 
 	return cnv(instr)
 
+def func16():
+	cnv = AC(hex_mode = True, output_mode = 'a')
+
+	path = str(Path(__file__).parent / "assembly/test5.s")
+
+	return cnv(path)
+
 #-----------------------------------------------------------------------------------------		
 #-----------------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------------
@@ -173,3 +216,7 @@ def test_14():
 
 def test_15():
 	assert func15() == ['0x00318233', '0x002080b3','0x00708093','0x00123023', '0x00023083']
+
+def test_16():
+	assert func16() == ['0x00a00413','0x00a00493','0xfff00493', 
+	'0x00048463', '0xfe000ce3', '0xfe040493']

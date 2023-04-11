@@ -19,12 +19,17 @@ class _Parser:
 	'''
 
 	def __call__(self, *args) -> list:
-		if exists(*args):
+		if exists(*args): # input is file
 			return _Parser.interpret_arr(_Parser.read_file(*args))
-		#return [_Parser.interpret(_Parser.tokenize(x)) for x in args[0].split("\n") if len(_Parser.tokenize(x)) > 0]
-		elif type(args[0]) == str:
+		elif type(args[0]) == str: # input is single line
 			return _Parser.interpret_arr(args[0].split('\n'))
-		return _Parser.interpret_arr(*args)
+		elif type(args[0]) == list:
+			return _Parser.interpret_arr(*args)
+
+		raise Exception('''Bad Input provided, 
+			make sure its either a valid file name, 
+			single-line instruction as a string, 
+			or a list of instructions as strings.''')
 
 	'''
 		In read_file(), Check if the inputted line is appropriate before

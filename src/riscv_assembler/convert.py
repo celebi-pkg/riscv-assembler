@@ -112,7 +112,9 @@ class AssemblyConverter:
 		if self.__output_mode == 'a':
 			return output
 		elif self.__output_mode == 'f':
+			prov_dir = '/'.join(file.split('/')[:-1])
 			assert file != None, "For output mode to file, need to provided file name."
+			assert exists(prov_dir if prov_dir != '' else '.'), "Directory of provided file name does not exist."
 			AssemblyConverter.write_to_file(output, file)
 			return
 		elif self.__output_mode == 'p':
