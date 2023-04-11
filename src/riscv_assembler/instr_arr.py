@@ -308,7 +308,7 @@ class _Pseudo_parse(InstructionParser):
 			rs1, rs2, rd = reg_map["x0"], reg_map[tokens[2]], reg_map[tokens[1]]
 			return R("sub", rs1, rs2, rd)
 
-		raise BadInstructionError()
+		raise Exception("Bad Instruction provided, this does not exist or has not been implemented here yet.")
 
 
 def register_map():
