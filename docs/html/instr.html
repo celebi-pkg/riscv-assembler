@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+		<link rel="stylesheet" href="https://www.w3schools.com/lib/w3-theme-black.css">
+		<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto">
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+		<script async defer src="https://buttons.github.io/buttons.js"></script>
+		<style>
+		html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif;}
+		.w3-sidebar {
+		  z-index: 3;
+		  width: 250px;
+		  top: 43px;
+		  bottom: 0;
+		  height: inherit;
+		}
+		</style>
+        <title>riscv-assembler Documentation</title>
+        <author>Kaya Çelebi</author>
+    </head>
+
+    <body>
+    	<!-- NAVBAR -->
+    	<div class="w3-top">
+		  <div class="w3-bar w3-theme w3-top w3-left-align w3-large">
+		    <a class="w3-bar-item w3-button w3-right w3-hide-large w3-hover-white w3-large w3-theme-l1" href="javascript:void(0)" onclick="w3_open()"><i class="fa fa-bars"></i></a>
+		    <a href="../index.html" class="w3-bar-item w3-button w3-hide-small w3-hover-white">Home</a>
+		    <a href="about.html" class="w3-bar-item w3-button w3-hide-small w3-hover-white">About</a>
+		    <a href="https://github.com/kcelebi/riscv-assembler" class="w3-bar-item w3-button w3-hide-small w3-hover-white">GitHub</a>
+		     <a href="https://pypi.org/project/riscv-assembler/" class="w3-bar-item w3-button w3-hide-small w3-hover-white">PyPI</a>
+		    <a href="#" class="w3-bar-item w3-button w3-theme-l1">Contribute</a>
+		    <a href="contact.html" class="w3-bar-item w3-button w3-hide-small w3-hover-white">Contact</a>
+		  </div>
+		</div>
+
+		<!-- Sidebar -->
+		<nav class="w3-sidebar w3-bar-block w3-collapse w3-large w3-theme-l5 w3-animate-left" id="mySidebar">
+		  <a href="javascript:void(0)" onclick="w3_close()" class="w3-right w3-xlarge w3-padding-large w3-hover-black w3-hide-large" title="Close Menu">
+		    <i class="fa fa-remove"></i>
+		  </a>
+		  <h4 class="w3-bar-item"><b>Menu</b></h4>
+		  <a class="w3-bar-item w3-button w3-hover-black" href="../index.html#install">Installation</a>
+		  <a class="w3-bar-item w3-button w3-hover-black" href="../index.html#usage">Usage</a>
+		  <a class="w3-bar-item w3-button w3-hover-black" href="ac.html">AssemblyConverter</a>
+		  <a class="w3-bar-item w3-button w3-hover-black" href="#">Instructions</a>
+		</nav>
+
+		<!-- Overlay effect when opening sidebar on small screens -->
+		<div class="w3-overlay w3-hide-large" onclick="w3_close()" style="cursor:pointer" title="close side menu" id="myOverlay"></div>
+
+		<!-- Main content: shift it to the right by 250 pixels when the sidebar is visible -->
+		<div class="w3-main" style="margin-left:250px">
+			<div class="w3-row w3-padding-64">
+			    <div class="w3-twothird w3-container">
+					<h1 class='w3-text-teal'>Instructions</h1>
+
+					<a class="github-button" href="https://github.com/kcelebi" aria-label="Follow @kcelebi on GitHub" data-size='large'>Follow @kcelebi</a>
+					<a class="github-button" href="https://github.com/kcelebi/riscv-assembler" data-icon="octicon-star" aria-label="Star kcelebi/riscv-assembler on GitHub" data-size='large'>Star</a>
+			    	<a id='install'></a>
+			    	<a class="github-button" href="https://github.com/kcelebi/riscv-assembler/subscription" data-icon="octicon-eye" data-size="large" aria-label="Watch kcelebi/riscv-assembler on GitHub">Watch</a>
+
+					
+			    	<p>Let's check out how to use <code class='w3-codespan'>Instructions</code>. The <code class = 'w3-codespan'>AssemblyConverter</code> utilizes these functionalities automatically, so familiarizing yourself with them only serves for utility/debugging purposes. First, let's import it into our Python file:</p>
+
+			    	<div class='w3-code notranslate'>
+			    		from riscv_assembler.instr_arr import *
+			    	</div>
+
+			    	<p>From this, we now have access to the functions to parse instructions and organize them to their binary outputs. Let us examine both.</p>
+
+			    	<h1 class = 'w3-text-teal'>Organizers</h1>
+
+			    	<p>These functions are most useful if you know the instruction, rs1, rs2, rd, etc. already. Example usage:</p>
+
+			    	<div class='w3-code notranslate'>
+			    		# outputs instruction as string in binary <br>
+			    		res = R(instr = "add", rs1 = "x0", rs2 = "x1", rd = "x1") <br>
+			    		res = I(instr = "addi", rs1 = "x0", imm = 10, rd = "x0") <br>
+			    	</div>
+
+			    	These organizers work for all types, <code class = 'w3-codespan'>R, I, S, SB, U, UJ</code>.
+
+			    	<h1 class = 'w3-text-teal'>Parsers</h1>
+
+			    	<p>These functions are most useful if you have only tokenized an instruction and have not determined which token corresponds to what parameters. There is a parser built into the package that can tokenize/clean the instruction for you, if you wish to use it. Observe:</p>
+
+			    	<div class='w3-code notranslate'>
+			    		# get built-in Parser <br>
+			    		from riscv_assembler.parse import Parser <br>
+
+			    		<br>
+
+			    		line = "add x0 x0 x1" <br>
+			    		tokens = Parser.tokenize(line) # Get clean line<br>
+
+			    		<br>
+
+			    		f = Parser.determine_type(tokens[0]) # determine which parser to use<br>
+			    		result = f(tokens)<br>
+			    	</div>
+
+			    	<p>If you know the parsing function to use in advance, you can also apply it directly. The functions for each instruction type, respectively, are <code class='w3-codespan'>Rp, Ip, Sp, SBp, Up, UJp</code>. All of this can also be accomplished with a built-in function:</p>
+
+			    	<div class='w3-code notranslate'>
+			    		# get built-in Parser <br>
+			    		from riscv_assembler.parse import Parser <br>
+
+			    		<br>
+
+			    		line = "add x0 x0 x1" <br>
+			    		result = Parser.interpret(line) <br>
+			    	</div>
+
+
+				</div>	
+			</div>
+
+			<footer id="myFooter">
+			    <div class="w3-container w3-theme-l2 w3-padding-32">
+			      <h4>Created and Maintained by Kaya Çelebi</h4>
+			     <a class="github-button" href="https://github.com/kcelebi" aria-label="Follow @kcelebi on GitHub" data-size='large'>Follow @kcelebi</a>
+					<a class="github-button" href="https://github.com/kcelebi/riscv-assembler" data-icon="octicon-star" aria-label="Star kcelebi/riscv-assembler on GitHub" data-size='large'>Star</a>
+					<a class="github-button" href="https://github.com/kcelebi/riscv-assembler/subscription" data-icon="octicon-eye" data-size="large" aria-label="Watch kcelebi/riscv-assembler on GitHub">Watch</a>
+			    </div>
+		  	</footer>
+			<!-- END MAIN -->
+		</div>
+
+		<script>
+		// Get the Sidebar
+		var mySidebar = document.getElementById("mySidebar");
+
+		// Get the DIV with overlay effect
+		var overlayBg = document.getElementById("myOverlay");
+
+		// Toggle between showing and hiding the sidebar, and add overlay effect
+		function w3_open() {
+		  if (mySidebar.style.display === 'block') {
+		    mySidebar.style.display = 'none';
+		    overlayBg.style.display = "none";
+		  } else {
+		    mySidebar.style.display = 'block';
+		    overlayBg.style.display = "block";
+		  }
+		}
+
+		// Close the sidebar with the close button
+		function w3_close() {
+		  mySidebar.style.display = "none";
+		  overlayBg.style.display = "none";
+		}
+		</script>
+	</body>
+</html>
