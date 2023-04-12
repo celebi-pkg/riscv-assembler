@@ -1,222 +1,109 @@
 import pytest
 from pathlib import Path
+from os.path import exists
 from riscv_assembler.convert import AssemblyConverter as AC
 from riscv_assembler.instr_arr import *
 from riscv_assembler.parse import Parser
-#TESTS
 
+num_test_files = 8
+num_questions = 15
 
-def SUITE(path):
-	# 1. convert directly from file to array
-	# 2. convert directly from file to print (return nothing)
-	# 3. convert directly from file to txt file
-	# 4. convert directly from file to bin file
+def SUITE():
+	# 0. convert directly from file to array
+	# 1. convert directly from file to print (return nothing)
+	# 2. convert directly from file to txt file
+	# 3. convert directly from file to bin file
 	#----
-	# 5. convert contents from string to array
-	# 6. convert contents from string to print (return nothing)
-	# 7. convert contents from string to txt file
-	# 8. convert contents from string to bin file
+	# 4. convert contents from string to array
+	# 5. convert contents from string to print (return nothing)
+	# 6. convert contents from string to txt file
+	# 7. convert contents from string to bin file
 	#----
-	# 5. convert contents from string array to array
-	# 6. convert contents from string array to print (return nothing)
-	# 7. convert contents from string array to txt file
-	# 8. convert contents from string array to bin file
+	# 8. convert contents from string array to array
+	# 9. convert contents from string array to print (return nothing)
+	# 10. convert contents from string array to txt file
+	# 11. convert contents from string array to bin file
 
-	dump_path = str(Path(__file__).parent / "dump/")
-	paths = [str(Path(__file__).parent / "assembly/test{}.s".format(i)) for i in range(7)]
+	dump_path = str(Path(__file__).parent / "dump")
+	paths = [str(Path(__file__).parent / "assembly/test{}.s".format(i)) for i in range(num_test_files)]
 
-	results = []
+	results = {i: [] for i in range(num_questions)}
 	for i, path in enumerate(paths):
+		# 1.
 		cnv = AC(hex_mode = True, output_mode = 'a')
-		results += [cnv(path)]
+		results[0] += [cnv(path)] #**
+		# 2.
 		cnv.output_mode = 'p'
-		cnv(path)
+		print('Printing Output')
+		results[1] += [cnv(path)]
+		# 3. 
 		cnv.output_mode = 'f'
-		cnv(path, dump_path + 'file{i}.txt'.format(i))
-		results += ['file{i}.txt'.format(i)]
-		cnv(path, dump_path + 'file{i}.bin'.format(i))
-		results += ['file{i}.bin'.format(i)]
+		cnv(path, dump_path + '/file{}.txt'.format(i))
+		results[2] += ['file{}.txt'.format(i)] #**
+		# 4. 
+		cnv(path, dump_path + '/file{}.bin'.format(i))
+		results[3] += ['file{}.bin'.format(i)] #**
 
 		with open(path) as f:
-			code = f.readlines()
+			code = [elem for elem in f.readlines() if len(elem.strip()) > 0]
+		str_code = ''.join(code)
+
+		# 5.
+		cnv.output_mode = 'a'
+		results[4] += [cnv(str_code)] #**
+		# 6.
+		cnv.output_mode = 'p'
+		print('Printing Output')
+		results[5] += [cnv(str_code)]
+		# 7. 
+		cnv.output_mode = 'f'
+		cnv(str_code, dump_path + '/str{}.txt'.format(i))
+		results[6] += ['str{}.txt'.format(i)] #**
+		# 8.
+		cnv(str_code, dump_path + '/str{}.bin'.format(i))
+		results[7] += ['str{}.bin'.format(i)] #**
+
+		code = [e.strip() for e in code]
+		# 9.
+		cnv.output_mode = 'a'
+		results[8] += [cnv(code)] #**
+		results[9] += [cnv.output_mode]
+		# 10.
+		cnv.output_mode = 'p'
+		results[10] += [cnv(code)]
+		results[11] += [cnv.output_mode]
+		# 11. 
+		cnv.output_mode = 'f'
+		cnv(code, dump_path + '/arr{}.txt'.format(i))
+		results[12] += ['arr{}.txt'.format(i)] #**
+		
+		# 12.
+		cnv(code, dump_path + '/arr{}.bin'.format(i))
+		results[13] += ['arr{}.bin'.format(i)] #**
+		results[14] += [cnv.output_mode]
 
 
-#test simple.s file, writes to txt and bin
-def func0():
-	#test convert, should return array
-	cnv = AC()
+	return results
 
-	path = str(Path(__file__).parent / "assembly/test0.s")
-	return cnv(path)
+ANSWERS = {
+	0: [['0x000000b3'], None, 'file0.txt', 'file0.bin', ['0x000000b3'], None, 'str0.txt', 'str0.bin', ['0x000000b3'], 'a', None, 'p', 'arr0.txt', 'arr0.bin', 'f'],
+	1: [['0x02040293'], None, 'file1.txt', 'file1.bin',['0x02040293'], None, 'str1.txt', 'str1.bin',['0x02040293'], 'a', None, 'p', 'arr1.txt', 'arr1.bin', 'f'],
+	2: [['0x00a00413', '0x00a00493', '0x00848263', '0xfe040493'], None, 'file2.txt', 'file2.bin', ['0x00a00413', '0x00a00493', '0x00848263', '0xfe040493'], None, 'str2.txt', 'str2.bin', ['0x00a00413', '0x00a00493', '0x00848263', '0xfe040493'], 'a', None, 'p', 'arr2.txt', 'arr2.bin', 'f'],
+	3: [['0x00812023'], None, 'file3.txt', 'file3.bin', ['0x00812023'], None, 'str3.txt', 'str3.bin', ['0x00812023'], 'a', None, 'p', 'arr3.txt', 'arr3.bin', 'f'],
+	4: [['0x000000b3', '0x02040293', '0x02040293','0x00812023'], None, 'file4.txt', 'file4.bin',['0x000000b3', '0x02040293', '0x02040293','0x00812023'], None, 'str4.txt', 'str4.bin',['0x000000b3', '0x02040293', '0x02040293','0x00812023'], 'a', None, 'p', 'arr4.txt', 'arr4.bin', 'f'],
+	5: [['0x00a00413','0x00a00493','0xfff00493','0x00048463','0xfe000ce3','0xfe040493'], None, 'file5.txt', 'file5.bin', ['0x00a00413','0x00a00493','0xfff00493','0x00048463','0xfe000ce3','0xfe040493'], None, 'str5.txt', 'str5.bin', ['0x00a00413','0x00a00493','0xfff00493','0x00048463','0xfe000ce3','0xfe040493'], 'a', None, 'p', 'arr5.txt', 'arr5.bin', 'f'],
+	6: [['0x00a00093','0xfec00113','0x00000663','0x00123023','0x00023083','0xfff00093','0x00123023','0x00023083','0xfe02c6e3'], None, 'file6.txt', 'file6.bin', ['0x00a00093','0xfec00113','0x00000663','0x00123023','0x00023083','0xfff00093','0x00123023','0x00023083','0xfe02c6e3'], None, 'str6.txt', 'str6.bin', ['0x00a00093','0xfec00113','0x00000663','0x00123023','0x00023083','0xfff00093','0x00123023','0x00023083','0xfe02c6e3'], 'a', None, 'p', 'arr6.txt', 'arr6.bin', 'f'],
+	7: [['0x00318233','0x002080b3','0x00708093','0x00123023','0x00023083'], None, 'file7.txt', 'file7.bin', ['0x00318233','0x002080b3','0x00708093','0x00123023','0x00023083'], None, 'str7.txt', 'str7.bin', ['0x00318233','0x002080b3','0x00708093','0x00123023','0x00023083'], 'a', None, 'p', 'arr7.txt', 'arr7.bin', 'f']}
+RESULTS = SUITE()
 
-def func1():
-	#test convert
-	cnv = AC()
+def error_label(q, test):
+	return "Question {q} Failed for Test {test}".format(q = q, test = test)
 
-	path = str(Path(__file__).parent / "assembly/test1.s")
-	return cnv(path)
+test_data = []
+for q in range(num_questions):
+	for t in range(num_test_files):
+		test_data += [(q, t)]
 
-def func2():
-	#test get/set OutpuType
-	outarr = []
-	cnv = AC()
-
-	outarr += [cnv.output_mode]
-	cnv.output_mode = 'p'
-	cnv.output_mode = 'f'
-	outarr += [cnv.output_mode]
-
-	return outarr
-
-def func4():
-	#test nibble form for convert
-	cnv = AC(nibble_mode = True)
-
-	path = str(Path(__file__).parent / "assembly/test0.s")
-	return cnv(path)
-
-def func5():
-	#test nibbleForm for convert
-	cnv = AC(nibble_mode = True)
-
-	path = str(Path(__file__).parent / "assembly/test1.s")
-	return cnv(path)
-
-def func6():
-	# test clone
-
-	cnv = AC(output_mode = 'p', nibble_mode = True, hex_mode = True)
-
-	cnv2 = cnv.clone()
-
-	return [cnv2.output_mode, cnv2.nibble_mode, cnv2.hex_mode]
-
-def func7():
-	#test calcJump()
-	path = str(Path(__file__).parent / "assembly/test2.s")
-
-	code = Parser.read_file(path)
-	return Ip.JUMP('loop', 2, code)
-
-def func8():
-	#test hex
-	out_arr = []
-	cnv = AC(hex_mode = True)
-
-	path = str(Path(__file__).parent / "assembly/test0.s")
-	out_arr += cnv(path)
-
-	path = str(Path(__file__).parent / "assembly/test1.s")
-	out_arr += cnv(path)
-
-	return out_arr
-
-def func9():
-	# test tokenizer
-	line = "add x0 x0 x1"
-
-	result = Parser.tokenize(line)
-
-	return result
-
-def func10():
-	line = "add x0 x0 x1"
-	tokens = Parser.tokenize(line)
-
-	return str(Parser.determine_type(tokens[0]))
-
-def func11():
-	line = ""
-	tokens = Parser.tokenize(line)
-
-	return tokens
-
-def func12():
-	cnv = AC(hex_mode = True, output_mode='a')
-
-	path = str(Path(__file__).parent / "assembly/test2.s")
-
-	return cnv(path)
-
-def func13():
-	cnv = AC(hex_mode = True, output_mode='a')
-
-	path = str(Path(__file__).parent / "assembly/test3.s")
-
-	return cnv(path)
-
-def func14():
-	cnv = AC(hex_mode = True, output_mode='a')
-
-	instr = 'add x1 x0 x0\naddi t0 s0 32\naddi t0 s0 32\nsw s0, 0(sp)'
-
-	return cnv(instr)
-
-def func15():
-	cnv = AC(hex_mode = True, output_mode = 'a')
-
-	instr = "add x4, x3, x3\nadd x1, x1, x2\naddi x1, x1, 7\nsd x1, 0(x4)\nld x1, 0(x4)"
-
-	return cnv(instr)
-
-def func16():
-	cnv = AC(hex_mode = True, output_mode = 'a')
-
-	path = str(Path(__file__).parent / "assembly/test5.s")
-
-	return cnv(path)
-
-#-----------------------------------------------------------------------------------------		
-#-----------------------------------------------------------------------------------------
-#-----------------------------------------------------------------------------------------
-
-
-def test_0():
-	assert func0() == ['00000000000000000000000010110011'], "Test 0 Failed"
-
-def test_1():
-	assert func1() == ['00000010000001000000001010010011'], "Test 1 Failed"
-
-def test_2():
-	assert func2() == ["a", "f"], "Test 2 Failed"
-
-def test_4():
-	assert func4() == ['0000\t0000\t0000\t0000\t0000\t0000\t1011\t0011'], "Test 4 Failed"
-
-def test_5():
-	assert func5() == ['0000\t0010\t0000\t0100\t0000\t0010\t1001\t0011'], "Test 5 Failed"
-
-def test_6():
-	assert func6() == ['p', True, True], "Test 6 Failed"
-
-def test_7():
-	assert func7() == 4
-
-def test_8():
-	assert func8() == ['0x000000b3', '0x02040293'], "Test 8 Failed"
-
-def test_9():
-	assert func9() == ['add', 'x0', 'x0', 'x1'], "Test 9 Failed"
-
-def test_10():
-	assert func10() == 'R Parser', "Test 10 Failed"
-
-def test_11():
-	assert func11() == []
-
-# Test file test2.s, need to implement JUMP
-def test_12():
-	assert func12() == ['0x00a00413', '0x00a00493', '0x00848263', '0xfe040493']
-
-def test_13():
-	assert func13() == ['0x00812023']
-
-def test_14():
-	assert func14() == ['0x000000b3', '0x02040293', '0x02040293','0x00812023']
-
-def test_15():
-	assert func15() == ['0x00318233', '0x002080b3','0x00708093','0x00123023', '0x00023083']
-
-def test_16():
-	assert func16() == ['0x00a00413','0x00a00493','0xfff00493', 
-	'0x00048463', '0xfe000ce3', '0xfe040493']
+@pytest.mark.parametrize("q, test", test_data)
+def test_compute(q: int, test: int):
+	assert RESULTS[q][test] == ANSWERS[test][q], error_label(q, test)

@@ -14,6 +14,7 @@
 
 from riscv_assembler.instr_arr import *
 from riscv_assembler.parse import *
+from os.path import exists
 
 __all__ = ['AssemblyConverter']
 
@@ -115,6 +116,11 @@ class AssemblyConverter:
 			prov_dir = '/'.join(file.split('/')[:-1])
 			assert file != None, "For output mode to file, need to provided file name."
 			assert exists(prov_dir if prov_dir != '' else '.'), "Directory of provided file name does not exist."
+
+			if self.__hex_mode and file[-4:] == '.bin':
+				# change back to binary
+				print('Warning: hex mode overrided in over to output to binary file.')
+				output = [format(int(elem, 16), '032b') for elem in output]
 			AssemblyConverter.write_to_file(output, file)
 			return
 		elif self.__output_mode == 'p':

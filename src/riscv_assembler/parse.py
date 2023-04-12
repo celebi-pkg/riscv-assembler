@@ -19,12 +19,13 @@ class _Parser:
 	'''
 
 	def __call__(self, *args) -> list:
-		if exists(*args): # input is file
+		
+		if type(args[0]) == list:
+			return _Parser.interpret_arr(*args)
+		elif exists(*args): # input is file
 			return _Parser.interpret_arr(_Parser.read_file(*args))
 		elif type(args[0]) == str: # input is single line
 			return _Parser.interpret_arr(args[0].split('\n'))
-		elif type(args[0]) == list:
-			return _Parser.interpret_arr(*args)
 
 		raise Exception('''Bad Input provided, 
 			make sure its either a valid file name, 
@@ -86,6 +87,7 @@ class _Parser:
 	@staticmethod
 	def interpret_arr(code : list) -> list:
 		int_code = []
+		code = [e.strip() for e in code]
 		for line_num, line in enumerate(code):
 			tokens = _Parser.tokenize(line, line_num, code)
 			int_code += [_Parser.interpret(tokens) for _ in range(1) if len(tokens) != 0]
