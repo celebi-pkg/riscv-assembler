@@ -126,7 +126,7 @@ class _SB(Instruction):
 	def immediate(imm, n):
 		mod_imm = format(((1 << 13) - 1) & int(imm), '013b')
 		if n == 1:
-			return mod_imm[12-12] + mod_imm[12-11:12-5]
+			return mod_imm[12-12] + mod_imm[12-10:12-4]
 		return mod_imm[12-4:12-0] + mod_imm[12-11]
 
 class _U(Instruction):
@@ -187,12 +187,13 @@ class InstructionParser:
 			raise Exception('''Address not found! Provided assembly code could
 				 be faulty, branch is expressed but not found in code.''')
 
+		pos = 1
 		if index > line_num: # forward search:
 			skip_labels = sum([1 for i in range(line_num, index) if code[i][-1] == ":"])
 		else: # backwards search
-			skip_labels = -1 * sum([1 for i in range(index+1, line_num) if code[i][-1] == ":"])
+			skip_labels = -1 * sum([1 for i in range(index, line_num) if code[i][-1] == ":"])
 
-		return (index - line_num - skip_labels) * 4
+		return (index - line_num - skip_labels) * 4 * pos
 
 class _R_parse(InstructionParser):
 
@@ -223,6 +224,8 @@ class _I_parse(InstructionParser):
 			else:
 				rs1, imm, rd = reg_map[tokens[1]], 0, reg_map["x1"]
 		elif instr == "lw":
+			rs1, imm, rd = reg_map[tokens[3]], tokens[2], reg_map[tokens[1]]
+		elif instr == 'ld':
 			rs1, imm, rd = reg_map[tokens[3]], tokens[2], reg_map[tokens[1]]
 		else:
 			rs1, imm, rd = reg_map[tokens[2]], tokens[3], reg_map[tokens[1]]

@@ -6,3 +6,5 @@ build
 .pytest_cache/
 deprc_setup.py
 __pycache__/
+tests/dump/*.bin
+tests/dump/*.txt
