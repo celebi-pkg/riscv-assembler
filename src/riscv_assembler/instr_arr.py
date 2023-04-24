@@ -184,8 +184,8 @@ class InstructionParser:
 		try:
 			index, skip_labels = code.index(tk + ":"), 0
 		except:
-			raise Exception('''Address not found! Provided assembly code could
-				 be faulty, branch is expressed but not found in code.''')
+			raise Exception('''Address not found for {}! Provided assembly code could 
+				be faulty, branch is expressed but not found in code.'''.format(tk))
 
 		pos = 1
 		if index > line_num: # forward search:
@@ -298,6 +298,7 @@ class _Pseudo_parse(InstructionParser):
 	def organize(self, tokens):
 		# better way to organize, express, abstract pseudo?
 		instr = tokens[0]
+		line_num, code = tokens[-2], tokens[-1]
 		if instr == 'nop':
 			rs1, imm, rd = reg_map["x0"], 0, reg_map["x0"]
 			return I("addi", rs1, imm, rd)
@@ -310,8 +311,14 @@ class _Pseudo_parse(InstructionParser):
 		elif instr == "neg":
 			rs1, rs2, rd = reg_map["x0"], reg_map[tokens[2]], reg_map[tokens[1]]
 			return R("sub", rs1, rs2, rd)
+		elif instr == "j":
+			return UJ("jal", super().JUMP(tokens[1], line_num, code), "x0")
+		elif instr == "li":
+			# This is missing addi rd rd -273
+			return U("lui", tokens[2], reg_map[tokens[1]])
+			# I("addi", reg_map[tokens[1]], reg_map[tokens[1]], tokens[2])
 
-		raise Exception("Bad Instruction provided, this does not exist or has not been implemented here yet.")
+		raise Exception("Bad Instruction provided, {} does not exist or has not been implemented here yet.".format(instr))
 
 
 def register_map():
