@@ -313,6 +313,9 @@ class _Pseudo_parse(InstructionParser):
 			return R("sub", rs1, rs2, rd)
 		elif instr == "j":
 			return UJ("jal", super().JUMP(tokens[1], line_num, code), "x0")
+		elif instr == "jr":
+			rs1, imm, rd = reg_map[tokens[1]], 0, reg_map["x0"]
+			return I("jalr", rs1, imm, rd)
 		elif instr == "li":
 			# This is missing addi rd rd -273
 			return U("lui", tokens[2], reg_map[tokens[1]])
