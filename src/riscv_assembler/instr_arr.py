@@ -357,7 +357,7 @@ reg_map, instr_map = register_map(), instruction_map()
 
 R_instr = [
 	"add","sub", "sll", 
-	"sltu", "xor", "srl", 
+	"slt", "sltu", "xor", "srl", 
 	"sra", "or", "and",
 	"addw", "subw", "sllw",
 	"slrw", "sraw", "mul",
