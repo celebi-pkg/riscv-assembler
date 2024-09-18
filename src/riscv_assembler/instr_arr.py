@@ -35,9 +35,32 @@ class _R(Instruction):
 	def compute_instr(self, instr, rs1, rs2, rd):
 		instr = super().check_instr_valid(instr, R_instr)
 		opcode, f3, f7 = 0, 1, 2
-
 		return "".join([
 			instr_map[instr][f7],
+			super().reg(rs2),
+			super().reg(rs1),
+			instr_map[instr][f3],
+			super().reg(rd),
+			instr_map[instr][opcode]
+		])
+
+class _R4(Instruction):
+	def __repr__(self):
+		return "R instruction"
+
+	def __str__(self):
+		return "R instruction"
+
+	def compute_instr(self, instr, rs3,rs2, rs1, rd):
+		instr = super().check_instr_valid(instr, R_instr)
+
+		opcode, f3 = 0, 1,
+		if instr in ["fmadd.s","fnmadd.s","fmsub.s","fnmsub.s"]:
+			fmt="00"
+		elif instr in ["fmadd.d","fnmadd.d","fmsub.d","fnmsub.d"]:
+			fmt="01"
+		return "".join([
+			super().reg(rs3)+fmt,
 			super().reg(rs2),
 			super().reg(rs1),
 			instr_map[instr][f3],
@@ -54,7 +77,18 @@ class _I(Instruction):
 
 	def compute_instr(self, instr, rs1, imm, rd):
 		instr = super().check_instr_valid(instr, I_instr)
-		opcode, f3 = 0, 1
+		opcode, f3, f7 = 0, 1, 2
+		# print(instr, rs1, imm, rd)
+		if len(instr_map[instr])==3:
+			imm=format(((1 << 12) - 1) & int(imm), '05b')
+			return "".join([
+				instr_map[instr][f7],
+				imm,
+				super().reg(rs1),
+				instr_map[instr][f3],
+				super().reg(rd),
+				instr_map[instr][opcode]
+			])		
 
 		return "".join([
 			_I.immediate(imm),
@@ -80,7 +114,6 @@ class _S(Instruction):
 	def compute_instr(self, instr, rs1, rs2, imm):
 		instr = super().check_instr_valid(instr, S_instr)
 		opcode, f3 = 0, 1
-
 		return "".join([
 			_S.immediate(imm, 1),
 			super().reg(rs2),
@@ -97,9 +130,10 @@ class _S(Instruction):
 						
 								return mod_imm, mod_imm_2'''
 		mod_imm = format(((1 << 12) - 1) & int(imm), '012b')
+	
 		if n == 1:
-			return mod_imm[0] + mod_imm[12-10 : 12-4]
-		return mod_imm[12-4 : 12 - 0] + mod_imm[1]
+			return mod_imm[0:7]
+		return mod_imm[7:12]
 
 
 class _SB(Instruction):
@@ -146,9 +180,14 @@ class _U(Instruction):
 			instr_map[instr][opcode]
 		])
 
-	@staticmethod
+	@staticmethod#TODO:fix
 	def immediate(imm):
-		return format(int(imm) >> 12, '013b')
+		# 检查输入是否为十六进制格式
+		if isinstance(imm, str) and imm.startswith('0x'):
+			imm = int(imm, 16)
+		else:
+			imm = int(imm)
+		return format(int(imm), '020b')
 
 class _UJ(Instruction):
 	def __repr__(self):
@@ -204,6 +243,44 @@ class _R_parse(InstructionParser):
 		return "R Parser"
 
 	def organize(self, tokens):
+		instr, rs1, imm, rd = tokens[0], None, None, None
+		if instr in ["amoadd.d",'amoadd.w',"amoand.d","amoand.w","amomax.w","amomax.d","amomaxu.d","amomaxu.w","amomin.d","amomin.w" ,\
+		"amominu.d" ,"amominu.w","amoor.d","amoor.w","amoswap.d","amoswap.w","amoxor.d","amoxor.w",]:
+			# print(tokens)
+			instr=tokens[0]
+			rd=reg_map[tokens[1]]
+			rs2=reg_map[tokens[2]]
+
+			start=tokens[3].find('(')
+			end=tokens[3].find(')')
+			rs1=reg_map[tokens[3][start+1:end]]
+			return R(instr, rs1, rs2, rd)
+		if instr in ["fmv.x.d","fmv.w.x","fmv.x.w","fmv.d.x"]:
+			instr,rd ,rs1,= tokens[0], reg_map[tokens[1]],reg_map[tokens[2]]
+			return R(instr, rs1, "x0", rd)
+		elif instr in ["fadd.s","fsub.s","fmul.s","fdiv.s","feq.s","fmin.s","fmax.s","fle.s","flt.s",
+					"fadd.d","fsub.d","fmul.d","fdiv.d","feq.d","fmin.d","fmax.d","fle.d","flt.d"]:
+			instr, rs1, rs2, rd = tokens[0], reg_map[tokens[2]], reg_map[tokens[3]], reg_map[tokens[1]]
+			return R(instr, rs1, rs2, rd)
+		elif instr in ["fsqrt.s","fclass.s","fcvt.s.wu","fcvt.s.w","fcvt.s.l","fcvt.s.lu","fcvt.w.s","fcvt.wu.s","fcvt.l.s","fcvt.lu.s",
+						"fsqrt.d","fclass.d","fcvt.d.wu","fcvt.d.w","fcvt.d.l","fcvt.d.lu","fcvt.w.d","fcvt.wu.d","fcvt.l.d","fcvt.lu.d",
+						"fcvt.s.d","fcvt.d.s",
+						]:#两寄存
+			instr, rs1, rd = tokens[0], reg_map[tokens[2]], reg_map[tokens[1]]
+			rs2='00000'
+			if instr in ["fcvt.s.wu","fcvt.d.wu","fcvt.wu.s","fcvt.s.d","fcvt.wu.d"]:
+				rs2='x1'#00001
+			elif instr in ["fcvt.s.l","fcvt.d.l","fcvt.l.s","fcvt.l.d"]:
+				rs2='x2'#00010
+			elif instr in ["fcvt.s.lu","fcvt.d.lu","fcvt.lu.s","fcvt.lu.d"]:
+				rs2="x3"#00011
+			return R(instr, rs1, rs2, rd)
+		elif instr in ["fmadd.s","fnmadd.s","fmsub.s","fnmsub.s",
+						"fmadd.d","fnmadd.d","fmsub.d","fnmsub.d"]:#四寄存器
+			instr, rs3,rs2,rs1, rd = tokens[0],reg_map[tokens[4]], reg_map[tokens[3]], reg_map[tokens[2]], reg_map[tokens[1]]
+			# instr, rs3,rs1, rs2, rd
+			return R4(instr, rs3,rs2,rs1, rd)
+
 		instr, rs1, rs2, rd = tokens[0], reg_map[tokens[2]], reg_map[tokens[3]], reg_map[tokens[1]]
 		return R(instr, rs1, rs2, rd)
 
@@ -225,22 +302,40 @@ class _I_parse(InstructionParser):
 				rs1, imm, rd = reg_map[tokens[1]], 0, reg_map["x1"]
 		elif instr == "lw":
 			rs1, imm, rd = reg_map[tokens[3]], tokens[2], reg_map[tokens[1]]
-		elif instr == 'ld':
+		elif instr in ['ld','lb','lh']:
 			rs1, imm, rd = reg_map[tokens[3]], tokens[2], reg_map[tokens[1]]
+		elif instr in ['lbu','lhu','lwu',"flw","fld"]:
+			start=tokens[2].find('(')
+			end=tokens[2].find(')')
+			rs1=reg_map[tokens[2][start+1:end]]
+			imm=tokens[2][0:start]
+			rd=reg_map[tokens[1]]
+		elif instr in["CSRRW"]:
+			rs1, csr, rd = reg_map[tokens[3]], tokens[2], reg_map[tokens[1]]
+			csr_to_number={'fflags':'110000000000'}
+			csr=csr_to_number[csr]
+			return I(instr, rs1, csr, rd)
 		else:
 			rs1, imm, rd = reg_map[tokens[2]], tokens[3], reg_map[tokens[1]]
-
 		return I(instr, rs1, imm, rd)
 
 class _S_parse(InstructionParser):
 
 	def __repr__(self):
 		return "S Parser"
-
+		# """  """
 	def __str__(self):
 		return "S Parser"
 
 	def organize(self, tokens):
+		instr=tokens[0]
+		if instr in ["fsw","fsd"]:
+			rs2=reg_map[tokens[1]]
+			start=tokens[2].find('(')
+			end=tokens[2].find(')')
+			rs1=reg_map[tokens[2][start+1:end]]
+			imm= tokens[2][0:start]
+			return S(instr, rs1, rs2, imm)
 		instr, rs1, rs2, imm = tokens[0], reg_map[tokens[3]], reg_map[tokens[1]], tokens[2]
 		return S(instr, rs1, rs2, imm)
 
@@ -266,7 +361,7 @@ class _U_parse(InstructionParser):
 		return "U Parser"
 
 	def organize(self, tokens):
-		instr, imm, rd = tokens[0], tokens[1], reg_map[tokens[2]]
+		instr,rd , imm = tokens[0], reg_map[tokens[1]],tokens[2], #TODO:修改参数输入顺序
 		return U(instr, imm, rd)
 
 class _UJ_parse(InstructionParser):
@@ -350,36 +445,53 @@ def instruction_map():
 	return imap
 
 
-R, I, S, SB, U, UJ = _R(), _I(), _S(), _SB(), _U(), _UJ()
+R, I, S, SB, U, UJ, R4 = _R(), _I(), _S(), _SB(), _U(), _UJ(),_R4()
 Rp, Ip, Sp, SBp, Up, UJp, Psp = _R_parse(), _I_parse(), _S_parse(), _SB_parse(), _U_parse(), _UJ_parse(), _Pseudo_parse()
 reg_map, instr_map = register_map(), instruction_map()
-
+# print(instr_map)
 
 R_instr = [
 	"add","sub", "sll", 
 	"sltu", "xor", "srl", 
 	"sra", "or", "and",
 	"addw", "subw", "sllw",
-	"slrw", "sraw", "mul",
-	"mulh", "mulu", "mulsu",
-	"div", "divu", "rem",
-	"remu"
+	"slrw", "sraw", "mul","mulw",
+	"mulh", "mulhu", "mulhsu",
+	"div","divw", "divu","divuw", "rem",
+	"remu","remw","remuw",
+	"amoadd.d","amoadd.w","amoand.d","amoand.w","amomax.w","amomax.d","amomaxu.d","amomaxu.w","amomin.d","amomin.w",
+	"amominu.d" ,"amominu.w","amoor.d","amoor.w","amoswap.d","amoswap.w","amoxor.d","amoxor.w",
+	# "fadd.s","fadd.d","fmv.x.d","fmv.w.x",'fmv.x.w',
+	# "fsub.s","fmul.s","fsub.s","fmul.s","fdiv.s","feq.s","feq.d","fsqrt.s","fmin.s","fmax.s","fle.s","fle.d","flt.s","flt.d",
+	# "fmadd.s","fnmadd.s", "fmsub.s","fnmsub.s",
+	# "fsub.d","fmul.d","fsub.d","fmul.d","fdiv.d",
+	"fadd.s","fmv.x.w","fsub.s","fmul.s","fdiv.s","feq.s","fsqrt.s","fmin.s","fmax.s","fle.s","flt.s","fmadd.s","fnmadd.s","fmsub.s","fnmsub.s","fmv.w.x",
+	"fadd.d","fmv.x.d","fsub.d","fmul.d","fdiv.d","feq.d","fsqrt.d","fmin.d","fmax.d","fle.d","flt.d","fmadd.d","fnmadd.d","fmsub.d","fnmsub.d","fmv.d.x",
+	"fcvt.s.d","fcvt.d.s",
+	# "fclass.s",
+	# "fcvt.s.wu","fcvt.s.w","fcvt.s.l","fcvt.s.lu",
+	# "fcvt.d.wu","fcvt.d.w","fcvt.d.l","fcvt.d.lu",
+	# "fcvt.w.s","fcvt.wu.s","fcvt.l.s","fcvt.lu.s",
+	# "fsgnj.s","fsgnjn.s","fsgnjx.s"
+	"fclass.s","fcvt.s.wu","fcvt.s.w","fcvt.s.l","fcvt.s.lu","fcvt.w.s","fcvt.wu.s","fcvt.l.s","fcvt.lu.s","fsgnj.s","fsgnjn.s","fsgnjx.s",
+	"fclass.d","fcvt.d.wu","fcvt.d.w","fcvt.d.l","fcvt.d.lu","fcvt.w.d","fcvt.wu.d","fcvt.l.d","fcvt.lu.d","fsgnj.d","fsgnjn.d","fsgnjx.d",
 ]
 I_instr = [
 	"addi", "lb", "lw",
-	"ld", "lbu", "lhu",
+	"ld", "lbu", "lhu","lh",
 	"lwu", "fence", "fence.i", 
 	"slli", "slti", "sltiu", 
-	"xori", "slri", "srai",
+	"xori", "srli", "srai",
 	"ori", "andi", "addiw",
 	"slliw", "srliw", "sraiw", 
 	"jalr", "ecall", "ebreak", 
 	"CSRRW", "CSRRS","CSRRC", 
-	"CSRRWI", "CSRRSI", "CSRRCI" 
+	"CSRRWI", "CSRRSI", "CSRRCI" ,
+	"flw","fld"
 ]
 S_instr = [
 	"sw", "sb", "sh", 
-	"sd"
+	"sd","fsw","fsd",
 ]
 SB_instr = [
 	"beq", "bne", "blt", 
