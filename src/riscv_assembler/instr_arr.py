@@ -182,7 +182,7 @@ class _U(Instruction):
 
 	@staticmethod#TODO:fix
 	def immediate(imm):
-		# 检查输入是否为十六进制格式
+		# 检查输入是否为十六进制格式,U类指令立即数为20位
 		if isinstance(imm, str) and imm.startswith('0x'):
 			imm = int(imm, 16)
 		else:
@@ -250,7 +250,6 @@ class _R_parse(InstructionParser):
 			instr=tokens[0]
 			rd=reg_map[tokens[1]]
 			rs2=reg_map[tokens[2]]
-
 			start=tokens[3].find('(')
 			end=tokens[3].find(')')
 			rs1=reg_map[tokens[3][start+1:end]]
@@ -258,14 +257,10 @@ class _R_parse(InstructionParser):
 		if instr in ["fmv.x.d","fmv.w.x","fmv.x.w","fmv.d.x"]:
 			instr,rd ,rs1,= tokens[0], reg_map[tokens[1]],reg_map[tokens[2]]
 			return R(instr, rs1, "x0", rd)
-		elif instr in ["fadd.s","fsub.s","fmul.s","fdiv.s","feq.s","fmin.s","fmax.s","fle.s","flt.s",
-					"fadd.d","fsub.d","fmul.d","fdiv.d","feq.d","fmin.d","fmax.d","fle.d","flt.d"]:
-			instr, rs1, rs2, rd = tokens[0], reg_map[tokens[2]], reg_map[tokens[3]], reg_map[tokens[1]]
-			return R(instr, rs1, rs2, rd)
 		elif instr in ["fsqrt.s","fclass.s","fcvt.s.wu","fcvt.s.w","fcvt.s.l","fcvt.s.lu","fcvt.w.s","fcvt.wu.s","fcvt.l.s","fcvt.lu.s",
 						"fsqrt.d","fclass.d","fcvt.d.wu","fcvt.d.w","fcvt.d.l","fcvt.d.lu","fcvt.w.d","fcvt.wu.d","fcvt.l.d","fcvt.lu.d",
 						"fcvt.s.d","fcvt.d.s",
-						]:#两寄存
+						]:#两寄存器
 			instr, rs1, rd = tokens[0], reg_map[tokens[2]], reg_map[tokens[1]]
 			rs2='00000'
 			if instr in ["fcvt.s.wu","fcvt.d.wu","fcvt.wu.s","fcvt.s.d","fcvt.wu.d"]:
@@ -278,7 +273,6 @@ class _R_parse(InstructionParser):
 		elif instr in ["fmadd.s","fnmadd.s","fmsub.s","fnmsub.s",
 						"fmadd.d","fnmadd.d","fmsub.d","fnmsub.d"]:#四寄存器
 			instr, rs3,rs2,rs1, rd = tokens[0],reg_map[tokens[4]], reg_map[tokens[3]], reg_map[tokens[2]], reg_map[tokens[1]]
-			# instr, rs3,rs1, rs2, rd
 			return R4(instr, rs3,rs2,rs1, rd)
 
 		instr, rs1, rs2, rd = tokens[0], reg_map[tokens[2]], reg_map[tokens[3]], reg_map[tokens[1]]
@@ -323,7 +317,6 @@ class _S_parse(InstructionParser):
 
 	def __repr__(self):
 		return "S Parser"
-		# """  """
 	def __str__(self):
 		return "S Parser"
 
@@ -361,7 +354,7 @@ class _U_parse(InstructionParser):
 		return "U Parser"
 
 	def organize(self, tokens):
-		instr,rd , imm = tokens[0], reg_map[tokens[1]],tokens[2], #TODO:修改参数输入顺序
+		instr,rd , imm = tokens[0], reg_map[tokens[1]],tokens[2], #修改参数输入顺序，正常都是instr rd imm顺序
 		return U(instr, imm, rd)
 
 class _UJ_parse(InstructionParser):
@@ -448,7 +441,7 @@ def instruction_map():
 R, I, S, SB, U, UJ, R4 = _R(), _I(), _S(), _SB(), _U(), _UJ(),_R4()
 Rp, Ip, Sp, SBp, Up, UJp, Psp = _R_parse(), _I_parse(), _S_parse(), _SB_parse(), _U_parse(), _UJ_parse(), _Pseudo_parse()
 reg_map, instr_map = register_map(), instruction_map()
-# print(instr_map)
+
 
 R_instr = [
 	"add","sub", "sll", 
@@ -461,18 +454,9 @@ R_instr = [
 	"remu","remw","remuw",
 	"amoadd.d","amoadd.w","amoand.d","amoand.w","amomax.w","amomax.d","amomaxu.d","amomaxu.w","amomin.d","amomin.w",
 	"amominu.d" ,"amominu.w","amoor.d","amoor.w","amoswap.d","amoswap.w","amoxor.d","amoxor.w",
-	# "fadd.s","fadd.d","fmv.x.d","fmv.w.x",'fmv.x.w',
-	# "fsub.s","fmul.s","fsub.s","fmul.s","fdiv.s","feq.s","feq.d","fsqrt.s","fmin.s","fmax.s","fle.s","fle.d","flt.s","flt.d",
-	# "fmadd.s","fnmadd.s", "fmsub.s","fnmsub.s",
-	# "fsub.d","fmul.d","fsub.d","fmul.d","fdiv.d",
 	"fadd.s","fmv.x.w","fsub.s","fmul.s","fdiv.s","feq.s","fsqrt.s","fmin.s","fmax.s","fle.s","flt.s","fmadd.s","fnmadd.s","fmsub.s","fnmsub.s","fmv.w.x",
 	"fadd.d","fmv.x.d","fsub.d","fmul.d","fdiv.d","feq.d","fsqrt.d","fmin.d","fmax.d","fle.d","flt.d","fmadd.d","fnmadd.d","fmsub.d","fnmsub.d","fmv.d.x",
 	"fcvt.s.d","fcvt.d.s",
-	# "fclass.s",
-	# "fcvt.s.wu","fcvt.s.w","fcvt.s.l","fcvt.s.lu",
-	# "fcvt.d.wu","fcvt.d.w","fcvt.d.l","fcvt.d.lu",
-	# "fcvt.w.s","fcvt.wu.s","fcvt.l.s","fcvt.lu.s",
-	# "fsgnj.s","fsgnjn.s","fsgnjx.s"
 	"fclass.s","fcvt.s.wu","fcvt.s.w","fcvt.s.l","fcvt.s.lu","fcvt.w.s","fcvt.wu.s","fcvt.l.s","fcvt.lu.s","fsgnj.s","fsgnjn.s","fsgnjx.s",
 	"fclass.d","fcvt.d.wu","fcvt.d.w","fcvt.d.l","fcvt.d.lu","fcvt.w.d","fcvt.wu.d","fcvt.l.d","fcvt.lu.d","fsgnj.d","fsgnjn.d","fsgnjx.d",
 ]
