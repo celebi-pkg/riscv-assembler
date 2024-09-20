@@ -78,7 +78,6 @@ class _I(Instruction):
 	def compute_instr(self, instr, rs1, imm, rd):
 		instr = super().check_instr_valid(instr, I_instr)
 		opcode, f3, f7 = 0, 1, 2
-		# print(instr, rs1, imm, rd)
 		if len(instr_map[instr])==3:
 			imm=format(((1 << 12) - 1) & int(imm), '05b')
 			return "".join([
@@ -182,7 +181,7 @@ class _U(Instruction):
 
 	@staticmethod#TODO:fix
 	def immediate(imm):
-		# 检查输入是否为十六进制格式,U类指令立即数为20位
+		# Check if the input is in hexadecimal format. The immediate value of U-type instructions is 20 bits.
 		if isinstance(imm, str) and imm.startswith('0x'):
 			imm = int(imm, 16)
 		else:
@@ -246,7 +245,6 @@ class _R_parse(InstructionParser):
 		instr, rs1, imm, rd = tokens[0], None, None, None
 		if instr in ["amoadd.d",'amoadd.w',"amoand.d","amoand.w","amomax.w","amomax.d","amomaxu.d","amomaxu.w","amomin.d","amomin.w" ,\
 		"amominu.d" ,"amominu.w","amoor.d","amoor.w","amoswap.d","amoswap.w","amoxor.d","amoxor.w",]:
-			# print(tokens)
 			instr=tokens[0]
 			rd=reg_map[tokens[1]]
 			rs2=reg_map[tokens[2]]
@@ -260,7 +258,7 @@ class _R_parse(InstructionParser):
 		elif instr in ["fsqrt.s","fclass.s","fcvt.s.wu","fcvt.s.w","fcvt.s.l","fcvt.s.lu","fcvt.w.s","fcvt.wu.s","fcvt.l.s","fcvt.lu.s",
 						"fsqrt.d","fclass.d","fcvt.d.wu","fcvt.d.w","fcvt.d.l","fcvt.d.lu","fcvt.w.d","fcvt.wu.d","fcvt.l.d","fcvt.lu.d",
 						"fcvt.s.d","fcvt.d.s",
-						]:#两寄存器
+						]:#R type instructions with two registers
 			instr, rs1, rd = tokens[0], reg_map[tokens[2]], reg_map[tokens[1]]
 			rs2='00000'
 			if instr in ["fcvt.s.wu","fcvt.d.wu","fcvt.wu.s","fcvt.s.d","fcvt.wu.d"]:
@@ -271,7 +269,7 @@ class _R_parse(InstructionParser):
 				rs2="x3"#00011
 			return R(instr, rs1, rs2, rd)
 		elif instr in ["fmadd.s","fnmadd.s","fmsub.s","fnmsub.s",
-						"fmadd.d","fnmadd.d","fmsub.d","fnmsub.d"]:#四寄存器
+						"fmadd.d","fnmadd.d","fmsub.d","fnmsub.d"]:#R type instructions with four registers
 			instr, rs3,rs2,rs1, rd = tokens[0],reg_map[tokens[4]], reg_map[tokens[3]], reg_map[tokens[2]], reg_map[tokens[1]]
 			return R4(instr, rs3,rs2,rs1, rd)
 
@@ -354,7 +352,7 @@ class _U_parse(InstructionParser):
 		return "U Parser"
 
 	def organize(self, tokens):
-		instr,rd , imm = tokens[0], reg_map[tokens[1]],tokens[2], #修改参数输入顺序，正常都是instr rd imm顺序
+		instr,rd , imm = tokens[0], reg_map[tokens[1]],tokens[2], #Change the parameter input order. The normal order is instr rd imm order.
 		return U(instr, imm, rd)
 
 class _UJ_parse(InstructionParser):
