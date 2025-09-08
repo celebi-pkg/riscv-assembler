@@ -56,8 +56,12 @@ class _I(Instruction):
 		instr = super().check_instr_valid(instr, I_instr)
 		opcode, f3 = 0, 1
 
+		immediate = _I.immediate(imm)
+		if instr == "srai":
+			immediate = "0100000" + immediate[7:]
+
 		return "".join([
-			_I.immediate(imm),
+			immediate,
 			super().reg(rs1),
 			instr_map[instr][f3],
 			super().reg(rd),
@@ -92,14 +96,18 @@ class _S(Instruction):
 
 	@staticmethod
 	def immediate(imm, n):
-		'''mod_imm = (int(imm) - ((int(imm) >> 12) << 12)) >> 5 # imm[11:5]
-								mod_imm_2 = int(imm) - ((int(imm) >> 5) << 5) # imm[4:0]
-						
-								return mod_imm, mod_imm_2'''
-		mod_imm = format(((1 << 12) - 1) & int(imm), '012b')
+		'''returns upper 7 bits of imm when n == 1 and lower 5 bits when n == 0'''
+		if not imm.isdigit():
+			raise ValueError("Attempting to use string as imm for 'sw'")
+		
+		imm = int(imm)
+		
+		assert -2048 <= imm <= 2047, f"Immediate {imm} out of range for 'sw' (expected -2048 to 2047)"
+
+		mod_imm = format(imm, '012b')
 		if n == 1:
-			return mod_imm[0] + mod_imm[12-10 : 12-4]
-		return mod_imm[12-4 : 12 - 0] + mod_imm[1]
+			return mod_imm[0:7]
+		return mod_imm[7:12]
 
 
 class _SB(Instruction):
@@ -181,19 +189,22 @@ class InstructionParser:
 
 	@staticmethod
 	def JUMP(tk : str, line_num : int, code: list) -> int:
-		try:
-			index, skip_labels = code.index(tk + ":"), 0
-		except:
-			raise Exception('''Address not found for {}! Provided assembly code could 
-				be faulty, branch is expressed but not found in code.'''.format(tk))
+		if tk.isdigit():
+			return int(tk)
+
+		index, skip_lines = code.index(tk + ":"), 0
 
 		pos = 1
 		if index > line_num: # forward search:
-			skip_labels = sum([1 for i in range(line_num, index) if code[i][-1] == ":"])
+			skip_lines = sum(
+				[1 for i in range(line_num, index) if not code[i] or code[i][-1] == ":"]
+			)
 		else: # backwards search
-			skip_labels = -1 * sum([1 for i in range(index, line_num) if code[i][-1] == ":"])
+			skip_lines = -1 * (sum(
+				[1 for i in range(index, line_num) if not code[i] or code[i][-1] == ":"]
+			))
 
-		return (index - line_num - skip_labels) * 4 * pos
+		return (index - line_num - skip_lines) * 4 * pos
 
 class _R_parse(InstructionParser):
 
@@ -370,8 +381,8 @@ I_instr = [
 	"ld", "lbu", "lhu",
 	"lwu", "fence", "fence.i", 
 	"slli", "slti", "sltiu", 
-	"xori", "slri", "srai",
-	"ori", "andi", "addiw",
+	"slri", "srai",  "srli",
+	"ori", "andi", "addiw", "xori"
 	"slliw", "srliw", "sraiw", 
 	"jalr", "ecall", "ebreak", 
 	"CSRRW", "CSRRS","CSRRC", 

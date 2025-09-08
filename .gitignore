@@ -8,3 +8,4 @@ deprc_setup.py
 __pycache__/
 tests/dump/*.bin
 tests/dump/*.txt
+**/.DS_Store
