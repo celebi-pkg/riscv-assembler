@@ -157,9 +157,11 @@ class AssemblyConverter:
 		raise NotImplementedError()
 
 	def mod(self, output : list) -> list:
+		print('inside mod:', output)
 		if self.__nibble_mode:
 			output = AssemblyConverter.apply_nibble(output)
 		elif self.__hex_mode:
+			print('here we convert to hex', output)
 			output = AssemblyConverter.apply_hex(output)
 		return output
 

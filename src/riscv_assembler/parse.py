@@ -58,9 +58,10 @@ class _Parser:
 
 	@staticmethod
 	def handle_specific_instr(x : list) -> list:
-		# for sw, lw, lb, lh, sb, sh
-		if len(x[0]) == 2 and (x[0] in S_instr or x[0] in I_instr):
+		# for sw, lw, lb, lh, sb, sh weird here. It should be rewrited clearer
+		if x[0]=='sw' or x[0]=='sh' or x[0]=='sb' or x[0] == 'lw' or x[0] == 'lh' or x[0] == 'lb' or x[0] == 'lhu' or x[0] == 'lbu' or (x[0]=='jalr' and len(x)==3): # op rd, offset(rs1)
 			y = x[-1].split('('); y[1] = y[1].replace(')','')
+			print('trigger special instr~~~', x[0])
 			return x[0:-1] + y
 		elif 'requires jump' == 5:
 			...
@@ -91,6 +92,7 @@ class _Parser:
 		for line_num, line in enumerate(code):
 			tokens = _Parser.tokenize(line, line_num, code)
 			int_code += [_Parser.interpret(tokens) for _ in range(1) if len(tokens) != 0]
+			print(int_code)
 
 		return int_code
 
@@ -124,6 +126,7 @@ class _Parser:
 		parsers = [Rp, Ip, Sp, SBp, Up ,UJp, Psp]
 		for i in range(len(instr_sets)):
 			if tk in instr_sets[i]:
+				print('detected instr:', tk)
 				return parsers[i]
 		raise Exception("Bad Instruction Provided: " + tk + "!")
 
